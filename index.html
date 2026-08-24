@@ -240,15 +240,19 @@
       <!-- Форма записи -->
       <form id="leadForm" class="form" style="display:none" onsubmit="return submitLead(event)">
         <div class="field">
-          <label for="leadName">Ваше имя</label>
-          <input id="leadName" type="text" name="name" placeholder="Как к вам обращаться" autocomplete="name">
+          <label for="leadName">Полное имя</label>
+          <input id="leadName" type="text" name="name" placeholder="Имя и фамилия" autocomplete="name">
         </div>
         <div class="field">
-          <label for="leadPhone">Телефон</label>
-          <input id="leadPhone" type="tel" name="phone" placeholder="+420 / +7 …" autocomplete="tel" inputmode="tel">
+          <label for="leadWhatsApp">WhatsApp</label>
+          <input id="leadWhatsApp" type="tel" name="whatsapp" placeholder="+420 / +7 …" autocomplete="tel" inputmode="tel">
+        </div>
+        <div class="field">
+          <label for="leadTelegram">Telegram</label>
+          <input id="leadTelegram" type="text" name="telegram" placeholder="@username или телефон" autocomplete="off">
         </div>
         <button class="btn btn-gold" type="submit">Отправить заявку</button>
-        <p class="form-hint">Свяжемся с вами и подтвердим место в группе.</p>
+        <p class="form-hint">Укажите хотя бы один способ связи — напишем и подтвердим место в группе.</p>
       </form>
 
       <button class="btn btn-ghost" onclick="restart()">Пройти тест заново</button>
@@ -272,6 +276,14 @@
 </div>
 
 <script>
+/* ============================================================
+   0) КУДА ОТПРАВЛЯТЬ ЗАЯВКИ.
+      Вставьте сюда URL веб-приложения Google Apps Script
+      (заканчивается на /exec). Пока пусто — заявка только пишется
+      в консоль браузера и никуда не уходит.
+   ============================================================ */
+const LEAD_ENDPOINT = 'https://script.google.com/macros/s/AKfycbze_vtjVPpvd5Et3PjvSs046fvw-33U2rMM3JHWLJoMXWRWjhZCKaj8eAcfGev2QZ9D/exec';
+
 /* ============================================================
    1) РЕКОМЕНДУЕМЫЕ ГРУППЫ  — легко редактируемая константа.
       Ключ = определённый уровень. Меняйте названия/даты здесь.
@@ -525,20 +537,31 @@ function showForm(){
 
 function submitLead(e){
   e.preventDefault();
-  const nameEl  = document.getElementById('leadName');
-  const phoneEl = document.getElementById('leadPhone');
-  const name  = nameEl.value.trim();
-  const phone = phoneEl.value.trim();
+  const nameEl = document.getElementById('leadName');
+  const waEl   = document.getElementById('leadWhatsApp');
+  const tgEl   = document.getElementById('leadTelegram');
+  const name     = nameEl.value.trim();
+  const whatsapp = waEl.value.trim();
+  const telegram = tgEl.value.trim();
 
   let ok = true;
+  // имя обязательно
   if(name.length < 2){ nameEl.classList.add('invalid'); ok=false; } else nameEl.classList.remove('invalid');
-  // простая проверка телефона: минимум 6 цифр
-  if((phone.replace(/\D/g,'').length) < 6){ phoneEl.classList.add('invalid'); ok=false; } else phoneEl.classList.remove('invalid');
+
+  // нужен хотя бы один способ связи: WhatsApp (мин. 6 цифр) или Telegram (мин. 2 символа)
+  const waOk = whatsapp.replace(/\D/g,'').length >= 6;
+  const tgOk = telegram.length >= 2;
+  if(!waOk && !tgOk){
+    waEl.classList.add('invalid'); tgEl.classList.add('invalid'); ok=false;
+  } else {
+    waEl.classList.remove('invalid'); tgEl.classList.remove('invalid');
+  }
   if(!ok) return false;
 
   const data = {
     name: name,
-    phone: phone,
+    whatsapp: whatsapp,
+    telegram: telegram,
     level: determinedLevel,
     group: recommendedGroup ? recommendedGroup.name : '',
     groupDate: recommendedGroup ? recommendedGroup.date : '',
@@ -549,12 +572,21 @@ function submitLead(e){
   return false;
 }
 
-/* ---------- ОТПРАВКА ЗАЯВКИ (заглушка под интеграцию) ---------- */
+/* ---------- ОТПРАВКА ЗАЯВКИ ----------
+   Если задан LEAD_ENDPOINT (Google Apps Script), отправляем туда.
+   no-cors + text/plain: без CORS-префлайта, «отправил и забыл» —
+   заявку в любом случае показываем принятой, UX не ломается. */
 function sendLead(data){
   console.log('LEAD:', data);
-  // TODO: сюда подключить webhook / ManyChat
-  // пример:
-  // fetch('https://your-endpoint', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data)});
+  if(!LEAD_ENDPOINT) return;
+  try{
+    fetch(LEAD_ENDPOINT, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: {'Content-Type': 'text/plain;charset=utf-8'},
+      body: JSON.stringify(data)
+    }).catch(function(){ /* сеть недоступна — не мешаем пользователю */ });
+  }catch(e){ /* игнорируем ошибки отправки */ }
 }
 
 /* ---------- Заново ---------- */
@@ -565,7 +597,8 @@ function restart(){
   servedQuestion = null;
   document.getElementById('leadForm').reset();
   document.getElementById('leadName').classList.remove('invalid');
-  document.getElementById('leadPhone').classList.remove('invalid');
+  document.getElementById('leadWhatsApp').classList.remove('invalid');
+  document.getElementById('leadTelegram').classList.remove('invalid');
   show('screen-start');
 }
 
