@@ -214,10 +214,11 @@ function submitLead(e){
   if(!ok) return false;
 
   const data = {
+    source: 'Расписание',
     name: name,
     whatsapp: whatsapp,
     telegram: telegram,
-    level: 'заявка со страницы расписания',
+    level: '',
     group: groupEl.value || '—',
     groupDate: '',
   };
