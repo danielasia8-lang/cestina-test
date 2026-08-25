@@ -104,6 +104,8 @@
   .btn-gold{background:var(--gold);color:#fff;box-shadow:0 8px 20px rgba(14,90,110,.25)}
   .btn-gold:hover{background:var(--gold-dark)}
   .btn-ghost{background:transparent;color:var(--muted);font-weight:600;font-size:15px;padding:12px}
+  .btn-outline{background:transparent;color:var(--teal);border:2px solid var(--teal);text-align:center;text-decoration:none}
+  .btn-outline:hover{background:var(--teal-soft)}
 
   /* ---------- Квиз ---------- */
   .qhead{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
@@ -220,7 +222,7 @@
     <!-- ЭКРАН 3 — РЕЗУЛЬТАТ -->
     <section id="screen-result" class="screen">
       <div class="result-center">
-        <p class="result-eyebrow">Ваш уровень</p>
+        <p class="result-eyebrow">Ваш предполагаемый уровень</p>
         <div class="result-level" id="resultLevel">A1</div>
         <span class="result-badge" id="resultScore"></span>
       </div>
@@ -255,7 +257,7 @@
         <p class="form-hint">Укажите хотя бы один способ связи — напишем и подтвердим место в группе.</p>
       </form>
 
-      <button class="btn btn-ghost" onclick="restart()">Пройти тест заново</button>
+      <a class="btn btn-outline" href="schedule.html">Посмотреть расписание всех уровней</a>
     </section>
 
     <!-- ЭКРАН 4 — СПАСИБО -->
